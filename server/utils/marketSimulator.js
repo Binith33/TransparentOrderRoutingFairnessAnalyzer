@@ -4,7 +4,7 @@ const User = require("../models/User");
 // Generates a random realistic order
 const generateRandomOrder = async () => {
     // Get the first user to attach simulated orders to, so they show up on the dashboard
-    const user = await User.findOne();
+    const user = await User.findOne().sort({ _id: -1 });
     if (!user) return null;
 
     const exchanges = ["NSE", "BSE"];
