@@ -13,7 +13,7 @@ router.get("/report", auth, async (req, res) => {
 
     try {
 
-        const orders = await Order.find({ userId: req.user.id });
+        const orders = await Order.find();
 
         if (orders.length === 0) {
 

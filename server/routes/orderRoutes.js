@@ -13,7 +13,7 @@ const upload = multer({ dest: path.join(__dirname, "../uploads") });
 router.get("/", auth, async (req, res) => {
     try {
         const userId = req.user.id || req.user._id; 
-        const orders = await Order.find({ userId }).sort({ createdAt: -1 });
+        const orders = await Order.find().sort({ createdAt: -1 });
         res.json(orders);
     } catch (error) {
         res.status(500).json({ message: error.message });
