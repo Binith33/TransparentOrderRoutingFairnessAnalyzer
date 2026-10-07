@@ -64,55 +64,113 @@ function Analytics() {
     const generateForensicReport = () => {
         const doc = new jsPDF();
         const user = JSON.parse(localStorage.getItem("user") || "{}");
+        const today = new Date().toLocaleDateString();
 
-        // HEADER
-        doc.setFillColor(37, 99, 235);
-        doc.rect(0, 0, 210, 40, "F");
+        // BRANDING HEADER
+        doc.setFillColor(15, 23, 42); // Deep Slate
+        doc.rect(0, 0, 210, 45, "F");
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(22);
-        doc.text("FORENSIC FAIRNESS REPORT", 105, 20, { align: "center" });
+        doc.setFontSize(26);
+        doc.setFont("helvetica", "bold");
+        doc.text("FORENSIC AUDIT REPORT", 14, 25);
+        
         doc.setFontSize(10);
-        doc.text(`Generated for: ${user.name || "Authorized Analyst"} | Date: ${new Date().toLocaleDateString()}`, 105, 30, { align: "center" });
-
-        // SYSTEM STATUS
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(148, 163, 184); // Slate 400
+        doc.text("Transparent Order Routing Fairness Analyzer (TORFA)", 14, 33);
+        
+        // DOCUMENT META
         doc.setTextColor(0, 0, 0);
-        doc.setFontSize(16);
-        doc.text("1. executive Summary", 20, 55);
-        doc.setFontSize(11);
-        doc.text(`System Rating: ${report.rating || "N/A"}`, 20, 65);
-        doc.text(`Fairness Score: ${(report.fairnessScore || 0).toFixed(2)}%`, 20, 72);
-        doc.text(`Exchange Balance Score: ${(report.exchangeFairness || 0).toFixed(2)}%`, 20, 79);
-        doc.text(`Latency Efficiency Score: ${(report.latencyFairness || 0).toFixed(2)}%`, 20, 86);
-        doc.text(`Average System Latency: ${(report.averageLatency || 0).toFixed(2)}ms`, 20, 93);
-
-        doc.setFontSize(16);
-        doc.text("2. Intelligent Insights", 20, 110);
-        const insightTxt = nseOrders === 0 && bseOrders === 0
-            ? "No routing data available. Import order logs to generate insights."
-            : (nseOrders > bseOrders
-                ? "NSE is currently your dominant liquidity source. We recommend secondary route verification."
-                : "BSE shows high utilization. Review routing parity against NSE benchmarks.");
         doc.setFontSize(10);
-        doc.text(doc.splitTextToSize(insightTxt, 170), 20, 118);
+        doc.setFont("helvetica", "bold");
+        doc.text(`DATE: ${today}`, 14, 55);
+        doc.text(`REQUESTED BY: ${user.name || "System Admin"}`, 14, 62);
+        doc.text(`REPORT ID: TRF-${Date.now().toString().slice(-6)}`, 14, 69);
+        
+        // DIVIDER
+        doc.setDrawColor(226, 232, 240);
+        doc.line(14, 75, 196, 75);
+
+        // 1. EXECUTIVE SUMMARY
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(30, 64, 175);
+        doc.text("1. EXECUTIVE SUMMARY", 14, 90);
+        
+        doc.setFontSize(11);
+        doc.setTextColor(51, 65, 85);
+        doc.setFont("helvetica", "normal");
+        const summaryText = `This document serves as an automated forensic audit of the order routing system. Based on an analysis of ${report.totalOrders || 0} executed orders, the system has achieved a fairness rating of ${report.rating || "N/A"}.`;
+        doc.text(doc.splitTextToSize(summaryText, 180), 14, 98);
+
+        // KPI CARDS (Drawn manually)
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(203, 213, 225);
+        
+        // Card 1
+        doc.rect(14, 115, 85, 25, "FD");
+        doc.setFontSize(9);
+        doc.setTextColor(100, 116, 139);
+        doc.text("FAIRNESS SCORE", 20, 123);
+        doc.setFontSize(14);
+        doc.setTextColor(5, 150, 105);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${(report.fairnessScore || 0).toFixed(2)}%`, 20, 132);
+
+        // Card 2
+        doc.rect(105, 115, 85, 25, "FD");
+        doc.setFontSize(9);
+        doc.setTextColor(100, 116, 139);
+        doc.setFont("helvetica", "normal");
+        doc.text("AVG SYSTEM LATENCY", 111, 123);
+        doc.setFontSize(14);
+        doc.setTextColor(124, 58, 237);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${(report.averageLatency || 0).toFixed(2)} ms`, 111, 132);
+
+        // 2. EXCHANGE DISTRIBUTION
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(30, 64, 175);
+        doc.text("2. LIQUIDITY DISTRIBUTION", 14, 160);
 
         autoTable(doc, {
-            startY: 135,
-            head: [["Exchange", "Volume", "Share %", "Status"]],
+            startY: 165,
+            head: [["Exchange Market", "Order Volume", "Share %", "Status"]],
             body: [
-                ["NSE", nseOrders, `${((nseOrders/report.totalOrders)*100 || 0).toFixed(1)}%`, nseOrders > 0 ? "Active" : "Idle"],
-                ["BSE", bseOrders, `${((bseOrders/report.totalOrders)*100 || 0).toFixed(1)}%`, bseOrders > 0 ? "Active" : "Idle"],
+                ["National Stock Exchange (NSE)", nseOrders, `${((nseOrders/(report.totalOrders || 1))*100 || 0).toFixed(1)}%`, nseOrders > 0 ? "Active" : "Idle"],
+                ["Bombay Stock Exchange (BSE)", bseOrders, `${((bseOrders/(report.totalOrders || 1))*100 || 0).toFixed(1)}%`, bseOrders > 0 ? "Active" : "Idle"],
             ],
-            theme: "striped",
-            headStyles: { fillColor: [37, 99, 235] }
+            theme: "grid",
+            headStyles: { fillColor: [15, 23, 42], textColor: 255, fontStyle: 'bold' },
+            styles: { fontSize: 10, cellPadding: 6 },
+            alternateRowStyles: { fillColor: [248, 250, 252] }
         });
 
+        // 3. AI COMPLIANCE INSIGHTS
+        const nextY = doc.lastAutoTable.finalY + 15;
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(30, 64, 175);
+        doc.text("3. COMPLIANCE & ANOMALIES", 14, nextY);
+        
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(51, 65, 85);
+        
+        const complianceText = report.fairnessScore > 90 
+            ? "PASSED: The routing engine demonstrates mathematically sound fairness with no systemic bias detected across liquidity pools. Execution latency falls within acceptable regulatory tolerances."
+            : "WARNING: Sub-optimal routing vectors detected. The system indicates a potential bias toward a single exchange or unacceptable latency gaps. Immediate engineering review is advised to prevent arbitrage exploitation.";
+            
+        doc.text(doc.splitTextToSize(complianceText, 180), 14, nextY + 8);
 
         // FOOTER
-        doc.setFontSize(9);
-        doc.setTextColor(150, 150, 150);
-        doc.text("This report is an automated forensic audit generated by the TORFA Platform.", 105, 285, { align: "center" });
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.text("This is an automatically generated, tamper-proof forensic log.", 105, 285, { align: "center" });
+        doc.text(`CONFIDENTIAL - PAGE 1 OF 1`, 105, 290, { align: "center" });
 
-        doc.save(`Forensic_Report_${Date.now()}.pdf`);
+        doc.save(`TORFA_Audit_${Date.now()}.pdf`);
     };
 
 

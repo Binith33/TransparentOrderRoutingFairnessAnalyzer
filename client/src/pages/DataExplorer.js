@@ -10,6 +10,8 @@ function DataExplorer() {
     const [filterType, setFilterType] = useState("ALL");
     const [searchTerm, setSearchTerm] = useState("");
 
+    const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
+
     useEffect(() => {
         API.get("/orders").then((res) => {
             setOrders(res.data);
@@ -24,7 +26,7 @@ function DataExplorer() {
     }, []);
 
     // Filter logic
-    const filteredOrders = orders.filter(o => {
+    let filteredOrders = orders.filter(o => {
         const matchExchange = filterExchange === "ALL" || o.exchange === filterExchange;
         const matchType = filterType === "ALL" || o.type === filterType;
         const matchSearch = o.symbol.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -32,6 +34,41 @@ function DataExplorer() {
         
         return matchExchange && matchType && matchSearch;
     });
+
+    // Sort logic
+    const requestSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    filteredOrders.sort((a, b) => {
+        if (!sortConfig.key) return 0;
+        
+        let valA = a[sortConfig.key];
+        let valB = b[sortConfig.key];
+
+        if (sortConfig.key === 'latency') {
+            valA = Number(a.executionTime) - Number(a.routingTime);
+            valB = Number(b.executionTime) - Number(b.routingTime);
+        } else if (sortConfig.key === 'createdAt') {
+            valA = new Date(a.createdAt).getTime();
+            valB = new Date(b.createdAt).getTime();
+        }
+
+        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    const getSortIcon = (name) => {
+        if (!sortConfig || sortConfig.key !== name) {
+            return " ↕";
+        }
+        return sortConfig.direction === "asc" ? " ↑" : " ↓";
+    };
 
     // CSV Export Logic
     const handleExportCSV = () => {
@@ -103,13 +140,13 @@ function DataExplorer() {
                     <table className="explorer-table">
                         <thead>
                             <tr>
-                                <th>Order ID</th>
-                                <th>Symbol</th>
-                                <th>Type</th>
-                                <th>Exchange</th>
-                                <th>Price</th>
-                                <th>Latency</th>
-                                <th>Date</th>
+                                <th onClick={() => requestSort('orderId')} style={{ cursor: 'pointer' }}>Order ID{getSortIcon('orderId')}</th>
+                                <th onClick={() => requestSort('symbol')} style={{ cursor: 'pointer' }}>Symbol{getSortIcon('symbol')}</th>
+                                <th onClick={() => requestSort('type')} style={{ cursor: 'pointer' }}>Type{getSortIcon('type')}</th>
+                                <th onClick={() => requestSort('exchange')} style={{ cursor: 'pointer' }}>Exchange{getSortIcon('exchange')}</th>
+                                <th onClick={() => requestSort('price')} style={{ cursor: 'pointer' }}>Price{getSortIcon('price')}</th>
+                                <th onClick={() => requestSort('latency')} style={{ cursor: 'pointer' }}>Latency{getSortIcon('latency')}</th>
+                                <th onClick={() => requestSort('createdAt')} style={{ cursor: 'pointer' }}>Date{getSortIcon('createdAt')}</th>
                             </tr>
                         </thead>
                         <tbody>

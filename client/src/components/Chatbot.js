@@ -1,3 +1,4 @@
+import ReactMarkdown from 'react-markdown';
 import { useState, useRef, useEffect } from "react";
 import { FaPaperPlane, FaRobot, FaTimes, FaCommentDots } from "react-icons/fa";
 import API from "../api";
@@ -82,7 +83,11 @@ function Chatbot() {
                     <div className="chatbot-messages">
                         {messages.map((msg, idx) => (
                             <div key={idx} className={`chat-bubble ${msg.sender === "bot" ? "chat-bot" : "chat-user"}`}>
-                                {msg.text}
+                                {msg.sender === "bot" ? (
+                                    <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                ) : (
+                                    msg.text
+                                )}
                             </div>
                         ))}
                         {isTyping && (
