@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import API from "../api";
+import { io } from "socket.io-client";
+import { IMG_BASE } from "../config";
 
 
 import FairnessChart from "../components/FairnessChart";
@@ -48,6 +50,15 @@ function Analytics() {
 
         fetchAnalytics();
 
+        // Connect WebSocket for Live Updates
+        const socket = io(IMG_BASE);
+        socket.on("new-live-order", (newOrder) => {
+            setOrders((prev) => [newOrder, ...prev]);
+            // Re-fetch report to update KPIs and Fairness score dynamically
+            API.get("/fairness/report").then((res) => setReport(res.data)).catch(console.log);
+        });
+
+        return () => socket.disconnect();
     }, []);
 
     const generateForensicReport = () => {
