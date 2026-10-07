@@ -20,4 +20,8 @@ const OrderSchema = new mongoose.Schema({
     executionTime: Number
 }, { timestamps: true });
 
+OrderSchema.index({ createdAt: -1 });
+OrderSchema.index({ exchange: 1 });
+OrderSchema.index({ userId: 1 });
+
 module.exports = mongoose.model("Order", OrderSchema);
