@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import API from "../api";
+import { io } from "socket.io-client";
+import { IMG_BASE } from "../config";
 import "./DataExplorer.css";
 
 function DataExplorer() {
@@ -12,6 +14,13 @@ function DataExplorer() {
         API.get("/orders").then((res) => {
             setOrders(res.data);
         }).catch(console.log);
+
+        const socket = io(IMG_BASE);
+        socket.on("new-live-order", (newOrder) => {
+            setOrders((prev) => [newOrder, ...prev]);
+        });
+
+        return () => socket.disconnect();
     }, []);
 
     // Filter logic

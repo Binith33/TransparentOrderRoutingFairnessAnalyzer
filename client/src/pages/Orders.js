@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import API from "../api";
+import { io } from "socket.io-client";
+import { IMG_BASE } from "../config";
 
 import { saveAs } from "file-saver";
 
@@ -132,6 +134,14 @@ function Orders() {
 
     useEffect(() => {
         fetchOrders();
+
+        // Connect WebSocket for Live Updates
+        const socket = io(IMG_BASE);
+        socket.on("new-live-order", (newOrder) => {
+            setOrders((prev) => [newOrder, ...prev]);
+        });
+
+        return () => socket.disconnect();
     }, []);
 
     useEffect(() => {
