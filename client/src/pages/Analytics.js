@@ -106,14 +106,6 @@ function Analytics() {
 
 
 
-    const activeExchanges =
-        [...new Set(
-            (orders || []).map(
-                (order) => order.exchange
-            )
-        )].length;
-
-
     const nseOrders =
         orders.filter(
             order => order.exchange === "NSE"

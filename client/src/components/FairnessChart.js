@@ -1,3 +1,4 @@
+import React from 'react';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -111,4 +112,4 @@ function FairnessChart({
     );
 }
 
-export default FairnessChart;
+export default React.memo(FairnessChart);

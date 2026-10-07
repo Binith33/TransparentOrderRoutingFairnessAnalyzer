@@ -75,6 +75,11 @@
     padding: 15px;
     border-bottom: 1px solid #f1f5f9;
     font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.explorer-table tr:hover td {
+    background-color: rgba(5, 150, 105, 0.05);
 }
 
 /* Dark mode support */

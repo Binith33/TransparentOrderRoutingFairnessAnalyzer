@@ -38,8 +38,6 @@ function Dashboard() {
         };
     }, []);
 
-    const activeExchanges = [...new Set(orders.map((o) => o.exchange))].length;
-
     return (
         <div className="dashboard">
 

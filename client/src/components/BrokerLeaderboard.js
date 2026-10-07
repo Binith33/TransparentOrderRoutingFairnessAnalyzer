@@ -92,4 +92,4 @@ function BrokerLeaderboard({ orders }) {
     );
 }
 
-export default BrokerLeaderboard;
+export default React.memo(BrokerLeaderboard);
