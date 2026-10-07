@@ -46,6 +46,7 @@ function Profile() {
             localStorage.setItem("user", JSON.stringify(res.data.user));
             setMemberSince(res.data.user.createdAt);
             alert("✅ Profile Updated Successfully");
+            window.location.reload(); // Force reload to update Sidebar and Navbar
         } catch (error) {
             alert("❌ Update Failed");
         }
