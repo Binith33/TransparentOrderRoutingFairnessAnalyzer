@@ -4,6 +4,7 @@ const formatUserResponse = (user) => ({
     email: user.email,
     phone: user.phone,
     role: user.role,
+    systemRole: user.systemRole,
     accountStatus: user.accountStatus,
     profilePic: user.profilePic,
     createdAt: user.createdAt

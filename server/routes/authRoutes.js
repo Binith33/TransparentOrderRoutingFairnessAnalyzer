@@ -5,9 +5,10 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { formatUserResponse } = require("../utils/userResponse");
+const { logAction } = require("../utils/logger");
 
-const createToken = (userId) =>
-    jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "10d" });
+const createToken = (user) =>
+    jwt.sign({ id: user._id, systemRole: user.systemRole }, process.env.JWT_SECRET, { expiresIn: "10d" });
 
 // REGISTER
 
@@ -53,21 +54,18 @@ router.post("/register", async (req, res) => {
             name: name.trim(),
             email: email.toLowerCase().trim(),
             phone: phone || "",
-
             role: "Fairness Analyst",
-
+            systemRole: req.body.role === "admin" ? "admin" : "analyst",
             accountStatus: "Active",
-
             password: hashedPassword
-
         });
 
         await user.save();
 
-        const token = createToken(user._id);
+        const token = createToken(user);
+        await logAction(user._id, "REGISTER", "User registered a new account");
 
         res.status(201).json({
-
             message: "Registration Successful",
             token,
             user: formatUserResponse(user)
@@ -129,10 +127,10 @@ router.post("/login", async (req, res) => {
 
         }
 
-        const token = createToken(user._id);
+        const token = createToken(user);
+        await logAction(user._id, "LOGIN", "User logged into the system");
 
         res.json({
-
             message: "Login Successful",
             token,
             user: formatUserResponse(user)

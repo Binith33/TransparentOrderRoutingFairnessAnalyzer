@@ -28,6 +28,12 @@ const UserSchema = new mongoose.Schema({
         default: "Fairness Analyst"
     },
 
+    systemRole: {
+        type: String,
+        enum: ['admin', 'analyst'],
+        default: 'analyst'
+    },
+
     accountStatus: {
         type: String,
         default: "Active"

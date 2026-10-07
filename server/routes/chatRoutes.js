@@ -4,6 +4,8 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const auth = require("../middleware/auth");
 const Order = require("../models/Order");
 
+const { detectAnomalies } = require("../utils/aiAnalytics");
+
 router.post("/", auth, async (req, res) => {
     try {
         const { message } = req.body;
@@ -14,7 +16,7 @@ router.post("/", auth, async (req, res) => {
 
         if (!process.env.GEMINI_API_KEY) {
             return res.status(200).json({
-                reply: "AI assistant is in offline mode. Add GEMINI_API_KEY to server/.env to enable live responses. You can still ask about fairness scores, latency, NSE/BSE distribution, and PDF reports from the Analytics page."
+                reply: "AI assistant is in offline mode. Add GEMINI_API_KEY to server/.env to enable live responses."
             });
         }
 
@@ -24,13 +26,24 @@ router.post("/", auth, async (req, res) => {
         if (orders.length > 0) {
             const nse = orders.filter((o) => o.exchange === "NSE").length;
             const bse = orders.filter((o) => o.exchange === "BSE").length;
-            const avgLatency =
-                orders.reduce(
-                    (sum, o) => sum + (Number(o.executionTime) - Number(o.routingTime)),
-                    0
-                ) / orders.length;
+            
+            const formattedOrders = orders.map(o => ({
+                exchange: o.exchange,
+                latencyMs: Number(o.executionTime) - Number(o.routingTime)
+            }));
+            
+            const avgLatency = formattedOrders.reduce((sum, o) => sum + o.latencyMs, 0) / orders.length;
+            const aiInsights = detectAnomalies(formattedOrders);
 
-            context = `User has ${orders.length} orders. NSE: ${nse}, BSE: ${bse}. Average latency: ${avgLatency.toFixed(2)}ms.`;
+            context = `
+                User has processed ${orders.length} orders. 
+                Exchange Distribution: NSE (${nse}), BSE (${bse}). 
+                Average latency: ${avgLatency.toFixed(2)}ms.
+                System AI Anomaly Status: ${aiInsights.summary}
+                System Prediction: ${aiInsights.prediction}
+                NSE Recent Anomalies: ${aiInsights.nseMetrics.recentAnomalies}
+                BSE Recent Anomalies: ${aiInsights.bseMetrics.recentAnomalies}
+            `;
         }
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -38,8 +51,10 @@ router.post("/", auth, async (req, res) => {
 
         const systemPrompt = `You are the TORFA (Transparent Order Routing Fairness Analyzer) AI Assistant.
 You help financial analysts understand fairness scores, routing latency (NSE vs BSE), exchange distribution bias, and compliance reports.
-Keep answers concise, professional, and practical.
-Current user context: ${context}
+Keep answers concise, professional, and practical. 
+If the user asks about their data or anomalies, reference the context below. If there are anomalies, suggest investigating the specific exchange.
+Current live data context for this user: ${context}
+
 User question: ${message.trim()}`;
 
         const result = await model.generateContent(systemPrompt);

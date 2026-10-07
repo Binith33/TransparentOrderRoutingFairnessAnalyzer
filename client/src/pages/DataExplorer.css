@@ -1,0 +1,97 @@
+.data-explorer .db-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.csv-export-btn {
+    background: #ffffff;
+    color: #059669;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.csv-export-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.explorer-filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.explorer-search {
+    flex: 2;
+    min-width: 200px;
+    padding: 12px 15px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.explorer-search:focus {
+    border-color: #059669;
+}
+
+.explorer-select {
+    flex: 1;
+    min-width: 150px;
+    padding: 12px 15px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    background: #f8fafc;
+    cursor: pointer;
+}
+
+.explorer-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.explorer-table th {
+    background: #f8fafc;
+    padding: 15px;
+    text-align: left;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #64748b;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.explorer-table td {
+    padding: 15px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+}
+
+/* Dark mode support */
+body.dark-mode .explorer-search,
+body.dark-mode .explorer-select {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
+body.dark-mode .explorer-table th {
+    background: #0f172a;
+    color: #94a3b8;
+    border-color: #334155;
+}
+
+body.dark-mode .explorer-table td {
+    border-color: #334155;
+    color: #f8fafc;
+}

@@ -12,6 +12,8 @@ import Register from "./pages/Register";
 import Sidebar from "./components/Sidebar";
 import Orders from "./pages/Orders";
 import Analytics from "./pages/Analytics";
+import AdminDashboard from "./pages/AdminDashboard";
+import DataExplorer from "./pages/DataExplorer";
 import Chatbot from "./components/Chatbot";
 
 function isAuthenticated() {
@@ -90,10 +92,28 @@ function App() {
         />
 
         <Route
+          path="/explorer"
+          element={
+            <ProtectedRoute>
+              <DataExplorer />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/profile"
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
             </ProtectedRoute>
           }
         />

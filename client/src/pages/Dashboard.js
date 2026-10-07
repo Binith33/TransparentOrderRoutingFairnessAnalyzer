@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { io } from "socket.io-client";
 import API from "../api";
 import FairnessChart from "../components/FairnessChart";
 import LatencyTrendChart from "../components/LatencyTrendChart";
+import BrokerLeaderboard from "../components/BrokerLeaderboard";
 import { IMG_BASE } from "../config";
 import "./Dashboard.css";
 
@@ -10,12 +12,30 @@ function Dashboard() {
     const [orders, setOrders] = useState([]);
     const [alertDismissed, setAlertDismissed] = useState(false);
 
-
     const user = JSON.parse(localStorage.getItem("user"));
 
     useEffect(() => {
-        API.get("/fairness/report").then((res) => setReport(res.data)).catch(console.log);
-        API.get("/orders").then((res) => setOrders(res.data)).catch(console.log);
+        // Initial Fetch
+        const fetchDashboardData = () => {
+            API.get("/fairness/report").then((res) => setReport(res.data)).catch(console.log);
+            API.get("/orders").then((res) => setOrders(res.data)).catch(console.log);
+        };
+        fetchDashboardData();
+
+        // WebSocket Connection
+        const socket = io(IMG_BASE); // connects to http://localhost:5000
+        
+        socket.on("new-live-order", (newOrder) => {
+            // Instantly add to activity feed & charts
+            setOrders((prevOrders) => [newOrder, ...prevOrders]);
+            
+            // Re-fetch report to update KPIs dynamically
+            API.get("/fairness/report").then((res) => setReport(res.data)).catch(console.log);
+        });
+
+        return () => {
+            socket.disconnect();
+        };
     }, []);
 
     const activeExchanges = [...new Set(orders.map((o) => o.exchange))].length;
@@ -94,33 +114,43 @@ function Dashboard() {
                 />
             </div>
 
+            {/* BROKER LEADERBOARD */}
+            <div className="db-panel" style={{ marginBottom: '25px' }}>
+                <p className="db-panel-title">🏆 Broker Routing Leaderboard</p>
+                <BrokerLeaderboard orders={orders} />
+            </div>
+
             {/* INTELLIGENCE + SUMMARY: Side by Side below chart */}
             <div className="db-two-col" style={{ marginBottom: '25px' }}>
 
                 <div className="db-panel">
-                    <p className="db-panel-title">🧠 System Intelligence</p>
+                    <p className="db-panel-title">🧠 Advanced AI Intelligence</p>
                     <div className="db-info-list">
                         <div className="db-info-row">
-                            <span>🛡️ Fairness Level</span>
-                            <strong style={{ color: report.statusColor }}>{report.rating || "—"}</strong>
-                        </div>
-                        <div className="db-info-row">
-                            <span>📊 Exchange Balance</span>
-                            <strong>{(report.exchangeFairness || 0).toFixed(1)}%</strong>
-                        </div>
-                        <div className="db-info-row">
-                            <span>⚡ Latency Efficiency</span>
-                            <strong>{(report.latencyFairness || 0).toFixed(1)}%</strong>
-                        </div>
-                        <div className="db-info-row">
-                            <span>🔍 Bias Detection</span>
-                            <strong style={{ color: report.fairnessScore > 80 ? '#059669' : '#ef4444' }}>
-                                {report.fairnessScore > 80 ? "Negative" : "Detected"}
+                            <span>🛡️ Status Summary</span>
+                            <strong style={{ color: report.aiInsights?.anomalyLevel === 'HIGH' ? '#ef4444' : '#059669' }}>
+                                {report.aiInsights?.summary || "Analyzing..."}
                             </strong>
                         </div>
                         <div className="db-info-row">
-                            <span>🌐 Exchange Diversity</span>
-                            <strong>{activeExchanges} Platforms</strong>
+                            <span>🔮 Predictive Insight</span>
+                            <strong>{report.aiInsights?.prediction || "Data collecting..."}</strong>
+                        </div>
+                        <div className="db-info-row">
+                            <span>📉 NSE Anomaly Spikes</span>
+                            <strong style={{ color: report.aiInsights?.nseMetrics?.recentAnomalies > 1 ? '#ef4444' : '#0f172a' }}>
+                                {report.aiInsights?.nseMetrics?.recentAnomalies || 0} events
+                            </strong>
+                        </div>
+                        <div className="db-info-row">
+                            <span>📉 BSE Anomaly Spikes</span>
+                            <strong style={{ color: report.aiInsights?.bseMetrics?.recentAnomalies > 1 ? '#ef4444' : '#0f172a' }}>
+                                {report.aiInsights?.bseMetrics?.recentAnomalies || 0} events
+                            </strong>
+                        </div>
+                        <div className="db-info-row">
+                            <span>🔍 Fairness Level</span>
+                            <strong style={{ color: report.statusColor }}>{report.rating || "—"}</strong>
                         </div>
                     </div>
                 </div>
@@ -129,7 +159,7 @@ function Dashboard() {
                     <p className="db-panel-title">📊 System Summary</p>
                     <div className="db-info-list">
                         <div className="db-info-row">
-                            <span>Total Orders</span>
+                            <span>Total Orders Processed</span>
                             <strong>{report.totalOrders || 0}</strong>
                         </div>
                         <div className="db-info-row">
@@ -137,12 +167,12 @@ function Dashboard() {
                             <strong>{(report.averageLatency || 0).toFixed(2)}ms</strong>
                         </div>
                         <div className="db-info-row">
-                            <span>Fairness Score</span>
+                            <span>Live Fairness Score</span>
                             <strong>{(report.fairnessScore || 0).toFixed(2)}</strong>
                         </div>
                         <div className="db-info-row">
                             <span>Network Status</span>
-                            <strong style={{ color: '#059669' }}>● Connected</strong>
+                            <strong style={{ color: '#059669' }}>● Connected via WebSocket</strong>
                         </div>
                     </div>
                 </div>

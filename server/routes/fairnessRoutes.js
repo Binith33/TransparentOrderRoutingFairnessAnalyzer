@@ -4,6 +4,10 @@ const Order = require("../models/Order");
 
 const router = express.Router();
 const auth = require("../middleware/auth");
+const { detectAnomalies } = require("../utils/aiAnalytics");
+const { sendAlertEmail } = require("../utils/emailService");
+
+let lastEmailSent = 0;
 
 router.get("/report", auth, async (req, res) => {
 
@@ -17,15 +21,15 @@ router.get("/report", auth, async (req, res) => {
                 message: "No Orders Found",
                 totalOrders: 0,
                 averageLatency: 0,
-                fairnessScore: 0,
-                exchangeFairness: 0,
                 latencyFairness: 0,
                 nseOrders: 0,
                 bseOrders: 0,
                 nseShare: 0,
                 bseShare: 0,
+                bseShare: 0,
                 rating: "No Data",
-                statusColor: "#64748b"
+                statusColor: "#64748b",
+                aiInsights: { summary: "No data available." }
             });
 
         }
@@ -61,6 +65,24 @@ router.get("/report", auth, async (req, res) => {
             rating = "Review Required";
             color = "#ef4444";
         }
+        
+        // Pass orders through the AI anomaly detection algorithm
+        // We calculate latencyMs on the fly since our AI module expects it
+        const formattedOrders = orders.map(o => ({
+            exchange: o.exchange,
+            latencyMs: Number(o.executionTime) - Number(o.routingTime)
+        }));
+        const aiInsights = detectAnomalies(formattedOrders);
+
+        // Send Email Alert if anomalies are severe (Debounced to once per minute)
+        if (aiInsights.anomalyLevel === "HIGH") {
+            const now = Date.now();
+            if (now - lastEmailSent > 60000) { // 60 seconds
+                // In a real app, query the admin user's email. We use a placeholder for demo.
+                sendAlertEmail("admin@torfa.com", aiInsights);
+                lastEmailSent = now;
+            }
+        }
 
         res.json({
             totalOrders: orders.length,
@@ -73,7 +95,8 @@ router.get("/report", auth, async (req, res) => {
             nseShare,
             bseShare,
             rating,
-            statusColor: color
+            statusColor: color,
+            aiInsights
         });
 
 

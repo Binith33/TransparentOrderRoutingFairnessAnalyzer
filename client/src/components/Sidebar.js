@@ -3,7 +3,9 @@ import {
     FaClipboardList,
     FaUser,
     FaSignOutAlt,
-    FaMoon
+    FaMoon,
+    FaShieldAlt,
+    FaTable
 } from "react-icons/fa";
 
 import { NavLink } from "react-router-dom";
@@ -74,10 +76,22 @@ function Sidebar() {
                     Analytics
                 </NavLink>
 
+                <NavLink to="/explorer">
+                    <FaTable />
+                    Data Explorer
+                </NavLink>
+
                 <NavLink to="/profile">
                     <FaUser />
                     Profile
                 </NavLink>
+
+                {user?.systemRole === "admin" && (
+                    <NavLink to="/admin" style={{ background: "rgba(124, 58, 237, 0.1)", color: "#7c3aed" }}>
+                        <FaShieldAlt />
+                        Admin Panel
+                    </NavLink>
+                )}
             </div>
 
 

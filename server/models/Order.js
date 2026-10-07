@@ -12,6 +12,10 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     price: Number,
     quantity: Number,
+    brokerId: {
+        type: String,
+        default: "Zerodha"
+    },
     routingTime: Number,
     executionTime: Number
 }, { timestamps: true });
